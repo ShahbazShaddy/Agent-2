@@ -24,7 +24,7 @@ def display_report(structured_output, output_paths):
         st.json(structured_output)
 
 def display_pdf(pdf_file):
-    """Display a PDF file directly in the Streamlit app"""
+    """Display a PDF file directly in the Streamlit app with a fallback download link"""
     with open(pdf_file, "rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
     
@@ -37,8 +37,7 @@ def display_pdf(pdf_file):
             type="application/pdf"
         ></iframe>
     """
-    
     st.markdown(pdf_display, unsafe_allow_html=True)
     
-    # Provide a message for browsers that have issues with the iframe display
+    # Provide a fallback message with a download link
     st.caption("If the PDF doesn't display correctly, you can download it using the button below.")
