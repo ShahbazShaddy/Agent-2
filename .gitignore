@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Output files
+outputs/
+data/
+
+# Virtual environments
+venv/
+env/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Python package files
+*.egg
+*.egg-info/
+dist/
+build/
+*.wheel
+
+# Streamlit cache
+.streamlit/
