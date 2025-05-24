@@ -5,6 +5,17 @@ import base64
 def display_report(structured_output, output_paths):
     st.header("📊 Tax Comparison Report")
     
+    # Display reasoning if available
+    if isinstance(structured_output, dict) and "reasoning" in structured_output:
+        st.subheader("🧠 AI Reasoning")
+        with st.expander("View AI's Analysis and Reasoning", expanded=True):
+            st.markdown(structured_output["reasoning"])
+        # Use the structured_data for the rest of the display
+        data_for_display = structured_output["structured_data"]
+    else:
+        # Legacy format or sample data
+        data_for_display = structured_output
+    
     # Display PDF embedded in the UI
     st.subheader("📄 PDF Report")
     display_pdf(output_paths['pdf'])
@@ -21,7 +32,7 @@ def display_report(structured_output, output_paths):
     
     # Make JSON output collapsible
     with st.expander("View Raw JSON Data"):
-        st.json(structured_output)
+        st.json(data_for_display)
 
 def display_pdf(pdf_file):
     """Display a PDF file directly in the Streamlit app with a fallback download link"""

@@ -13,18 +13,24 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 def generate_outputs(structured_output):
     """Generate PDF, Excel, and JSON outputs from the structured data"""
     try:
+        # Handle both old and new format (ReAct framework)
+        if isinstance(structured_output, dict) and "structured_data" in structured_output:
+            data_to_format = structured_output["structured_data"]
+        else:
+            data_to_format = structured_output
+            
         # Validate input
-        if not structured_output:
+        if not data_to_format:
             raise ValueError("No data received for output generation")
             
-        if not isinstance(structured_output, list):
-            raise ValueError(f"Expected list but got {type(structured_output)}")
+        if not isinstance(data_to_format, list):
+            raise ValueError(f"Expected list but got {type(data_to_format)}")
             
-        if len(structured_output) == 0:
+        if len(data_to_format) == 0:
             raise ValueError("Received empty data list")
         
         # Ensure all items have required fields
-        for item in structured_output:
+        for item in data_to_format:
             if not isinstance(item, dict):
                 raise ValueError(f"Expected dict but got {type(item)}")
             if not all(k in item for k in ["type", "2023", "2024", "difference"]):
@@ -36,10 +42,10 @@ def generate_outputs(structured_output):
         # Save JSON
         json_path = f"{OUTPUT_DIR}/output_{timestamp}.json"
         with open(json_path, "w") as f:
-            json.dump(structured_output, f, indent=2)
+            json.dump(data_to_format, f, indent=2)
         
         # Create DataFrame - add index to prevent "all scalar values" error
-        df = pd.DataFrame(structured_output).reset_index(drop=True)
+        df = pd.DataFrame(data_to_format).reset_index(drop=True)
         
         # Save Excel with better formatting
         excel_path = f"{OUTPUT_DIR}/summary_comparison_{timestamp}.xlsx"
@@ -77,6 +83,22 @@ def generate_outputs(structured_output):
         pdf.cell(0, 6, f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 0, 1)
         pdf.ln(5)
         
+        # If reasoning is available in the original input, include it in the PDF
+        if isinstance(structured_output, dict) and "reasoning" in structured_output:
+            pdf.set_font("Arial", "B", 14)
+            pdf.cell(0, 10, "AI Reasoning and Analysis", 0, 1, "L")
+            pdf.set_font("Arial", "", 10)
+            
+            # Format and add reasoning text (limit to avoid overflows)
+            reasoning_text = structured_output["reasoning"]
+            # Split into paragraphs to handle properly
+            paragraphs = reasoning_text.split('\n')
+            for paragraph in paragraphs:
+                if paragraph.strip():  # Only add non-empty paragraphs
+                    pdf.multi_cell(0, 5, paragraph.strip())
+                    pdf.ln(2)
+            pdf.ln(5)
+        
         # Organize data by categories
         category_groups = {
             "PERSONAL INFORMATION": [],
@@ -91,7 +113,7 @@ def generate_outputs(structured_output):
         }
         
         # Sort items into categories
-        for item in structured_output:
+        for item in data_to_format:
             category_type = item["type"]
             
             # Determine which group this item belongs to
@@ -168,10 +190,10 @@ def generate_outputs(structured_output):
         
         # Add summary statistics at the end
         try:
-            agi_2023 = next((item['2023'] for item in structured_output if item['type'].upper() == 'ADJUSTED_GROSS_INCOME'), 0)
-            agi_2024 = next((item['2024'] for item in structured_output if item['type'].upper() == 'ADJUSTED_GROSS_INCOME'), 0)
-            total_tax_2023 = next((item['2023'] for item in structured_output if item['type'].upper() == 'TOTAL_TAX'), 0)
-            total_tax_2024 = next((item['2024'] for item in structured_output if item['type'].upper() == 'TOTAL_TAX'), 0)
+            agi_2023 = next((item['2023'] for item in data_to_format if item['type'].upper() == 'ADJUSTED_GROSS_INCOME'), 0)
+            agi_2024 = next((item['2024'] for item in data_to_format if item['type'].upper() == 'ADJUSTED_GROSS_INCOME'), 0)
+            total_tax_2023 = next((item['2023'] for item in data_to_format if item['type'].upper() == 'TOTAL_TAX'), 0)
+            total_tax_2024 = next((item['2024'] for item in data_to_format if item['type'].upper() == 'TOTAL_TAX'), 0)
             
             if agi_2023 > 0 or agi_2024 > 0:
                 pdf.set_font("Arial", "B", 12)

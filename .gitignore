@@ -9,7 +9,8 @@ __pycache__/
 
 # Logs
 *.log
-
+.pdf
+reports/
 # Output files
 outputs/
 data/
